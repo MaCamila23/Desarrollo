@@ -1,28 +1,37 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import JSONResponse
+import csv
+import os
 
 app=FastAPI()
 
-productos= [
-    {
-        "codigo" : 1,
-        "nombre" : "Esfero",
-        "valor" : 3500,
-        "existencia" : 10
-    },
-     {
-        "codigo" : 2,
-        "nombre" : "Cuaderno",
-        "valor" : 5000,
-        "existencia" : 15
-    },
-     {
-        "codigo" : 3,
-        "nombre" : "Lapiz",
-        "valor" : 200,
-        "existencia" : 12
-    }
-]
+# Cargar productos desde el archivo CSV al iniciar la aplicación
+archivo_csv = "productos.csv"
+
+# Función para cargar productos desde el archivo CSV
+def cargar_productos():
+    lista = []
+    if os.path.exists(archivo_csv):
+        with open(archivo_csv, mode='r', newline='', encoding='utf-8') as file:
+            reader = csv.DictReader(file)
+            for row in reader:
+                lista.append({
+                    "codigo": int(row["codigo"]),
+                    "nombre": row["nombre"],
+                    "valor": float(row["valor"]),
+                    "existencia": int(row["existencia"])
+                })
+    return lista
+
+# Lista de productos en memoria
+def guardar_productos():
+    with open(archivo_csv, mode='w', newline='', encoding='utf-8') as file:
+        writer = csv.DictWriter(file, fieldnames=["codigo","nombre","valor","existencia"])
+        writer.writeheader()
+        writer.writerows(productos)
+
+# Cargar productos al iniciar la aplicación
+productos = cargar_productos()
 
 @app.get('/')
 def mensaje():
@@ -38,6 +47,7 @@ def mensaje3(edad:int):
 @app.get('/productos/')
 def listProductos():
     return productos
+
 #Validación de existencia del producto
 @app.get('/productos/{cod}')
 def findProductos(cod:int): 
@@ -47,7 +57,7 @@ def findProductos(cod:int):
     return "El producto no existe"
 
 #Validación de existencia del producto por nombre
-@app.get('/productos/')
+@app.get('/productos/buscar/')
 def findProductos2(nom:str): 
     for prod in productos:
         if prod['nombre']==nom:
@@ -59,14 +69,16 @@ def findProductos2(nom:str):
 def crearProducto(cod:int, nom:str,val:float,exi:int):
     if val <= 0 or exi <= 0:
         return "El valor y las existencias deben ser mayores a 0"
-    nuevo_cod = max(p['codigo'] for p in productos) + 1
+    nuevo_cod = max([p['codigo'] for p in productos], default=0) + 1
     productos.append({
         'codigo': nuevo_cod, 
         'nombre': nom, 
         'valor': val, 
         'existencia': exi, 
     })
+    guardar_productos()
     return productos
+
 #Validación siguiente consecutivo, valor y existencias mayores a 0 usando Body para recibir los datos en el cuerpo de la petición
 @app.post('/productos2')
 def crearProducto2(
@@ -84,7 +96,9 @@ def crearProducto2(
         'valor': val, 
         'existencia': exi, 
     })
+    guardar_productos()
     return productos
+
 #Validación de existencia del producto, valor y existencias mayores a 0
 @app.put('/producto/{cod}')
 def updateProducto(cod:int,
@@ -100,6 +114,7 @@ def updateProducto(cod:int,
             prod['nombre']=nom
             prod['valor']=val
             prod['existencia']=exi
+            guardar_productos()
             return{"antes": antes, "despues": dict(prod)}
     return "El producto no existe"
 
@@ -110,5 +125,6 @@ def deleteProducto(cod:int):
         if prod['codigo']==cod:
             eliminado = dict(prod)
             productos.remove(prod)
+            guardar_productos()
             return {"mensaje": "Producto eliminado", "producto": eliminado}
     return {"mensaje": "Producto no encontrado"}
