@@ -1,34 +1,25 @@
 from fastapi import FastAPI, Body
 from fastapi.responses import JSONResponse
-import csv
+import json
 import os
 
 app=FastAPI()
 
-# Cargar productos desde el archivo CSV al iniciar la aplicación
-archivo_csv = "productos.csv"
+# Cargar productos desde el archivo JSON al iniciar la aplicación
+archivo_json = "productos.json"
 
-# Función para cargar productos desde el archivo CSV
+# Función para cargar productos desde JSON
 def cargar_productos():
     lista = []
-    if os.path.exists(archivo_csv):
-        with open(archivo_csv, mode='r', newline='', encoding='utf-8') as file:
-            reader = csv.DictReader(file)
-            for row in reader:
-                lista.append({
-                    "codigo": int(row["codigo"]),
-                    "nombre": row["nombre"],
-                    "valor": float(row["valor"]),
-                    "existencia": int(row["existencia"])
-                })
+    if os.path.exists(archivo_json):
+        with open(archivo_json, mode='r', encoding='utf-8') as file:
+            lista = json.load(file)
     return lista
 
 # Lista de productos en memoria
 def guardar_productos():
-    with open(archivo_csv, mode='w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=["codigo","nombre","valor","existencia"])
-        writer.writeheader()
-        writer.writerows(productos)
+    with open(archivo_json, mode='w', encoding='utf-8') as file:
+        json.dump(productos, file, indent=4)
 
 # Cargar productos al iniciar la aplicación
 productos = cargar_productos()
