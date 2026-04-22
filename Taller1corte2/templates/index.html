@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Inventario de Productos</title>
+    <link rel="stylesheet" href="/static/styles.css">
+</head>
+<body>
+
+    <h1>Lista de Productos</h1>
+
+    <table>
+        <thead>
+            <tr>
+                <th>Código</th>
+                <th>Nombre</th>
+                <th>Valor Unidad</th>
+                <th>Existencias</th>
+                <th>Valor Total</th>
+                <th>Estado Inventario</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for producto in productos %}
+            <tr>
+                <td>{{ producto.codigo }}</td>
+                <td>{{ producto.nombre }}</td>
+                <td>{{ producto.valoru }}</td>
+                <td>{{ producto.existencias }}</td>
+                <td>{{ producto.valor_total }}</td>
+                <td class="{{ producto.clase }}">
+                    {{ producto.estado }}
+                </td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+</body>
+</html>
